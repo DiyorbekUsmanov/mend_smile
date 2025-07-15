@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "282011541748",
+    "project_id": "mend-smile-bbde9",
+    "storage_bucket": "mend-smile-bbde9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:282011541748:android:c71311d4e7d36958a97ea1",
+        "android_client_info": {
+          "package_name": "com.example.mend_smile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqAVOwB6WxVjcthjkXIcvlgYIwHJRTQdM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
