@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-class AppColors {
-  static const Color primary = Color(0xFF2AA8DF);
-}
+import '../../../utils/AppColors.dart';
 
 class PatientHomePage extends StatefulWidget {
   const PatientHomePage({super.key});
@@ -46,7 +44,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors().primary,
         elevation: 0,
         title: Row(
           children: [
@@ -130,7 +128,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
         LinearProgressIndicator(
           value: progress.clamp(0.0, 1.0),
           backgroundColor: Colors.grey.shade300,
-          valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+          valueColor: AlwaysStoppedAnimation(AppColors().primary),
         ),
         const SizedBox(height: 6),
         Row(

@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:mend_smile/presentation/pages/bottom_bar_pages/patient_home_page.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/route_names.dart';
+import '../../core/session_manager.dart';
 import '../../data/firebase_service.dart';
+import '../../utils/AppColors.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -20,6 +23,8 @@ class _SignupPageState extends State<SignupPage> {
   String? _statusMessage;
   Color? _statusColor;
 
+  Stream<DocumentSnapshot<Map<String, dynamic>>>? _statusStream;
+
   @override
   void dispose() {
     _name.dispose();
@@ -28,55 +33,56 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future<void> _submit() async {
-    if (_name.text.isEmpty || _phone.text.isEmpty || _date == null) return;
+    if (_name.text.isEmpty || _phone.text.isEmpty || _date == null) {
+      setState(() {
+        _statusMessage = 'Please fill in all fields.';
+        _statusColor = Colors.red;
+      });
+      return;
+    }
+
+    FocusScope.of(context).unfocus(); // hide keyboard
     setState(() {
       _busy = true;
       _statusMessage = null;
     });
-    final query = await FirebaseFirestore.instance
-        .collection('patients')
-        .where('name', isEqualTo: _name.text.trim())
-        .where('phone', isEqualTo: _phone.text.trim())
-        .limit(1)
-        .get();
 
-    if (query.docs.isNotEmpty) {
-      final status = query.docs.first.data()['status'];
-      if (status == 'approved') {
-        setState(() {
-          _statusMessage = '✅ Patient is approved, please go to sign-in page.';
-          _statusColor = Colors.green;
-          _busy = false;
-        });
-      } else {
-        setState(() {
-          _statusMessage = '⛔ Patient found, but not yet approved by dentist.';
-          _statusColor = Colors.red;
-          _busy = false;
-        });
-      }
-      return;
+    try {
+      final docId = await FirebaseService.instance.createPatient(
+        name: _name.text.trim(),
+        phone: _phone.text.trim(),
+        surgeryDate: _date!,
+      );
+
+      setState(() {
+        _waiting = true;
+        _busy = false;
+      });
+
+      _statusStream = FirebaseService.instance.patientStatusStream(docId);
+      _statusStream!.listen((snap) async {
+        final data = snap.data();
+        if (data != null) {
+          final status = data['status'];
+          if (status == 'approved') {
+            await SessionManager.saveSession('patient');
+            context.go(RouteNames.patientHomePage);
+          } else if (status == 'duplicate') {
+            setState(() {
+              _statusMessage = '⛔ Patient already exists. Please use the Sign In page.';
+              _statusColor = Colors.red;
+              _waiting = false;
+            });
+          }
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Error: ${e.toString().replaceFirst('Exception: ', '')}';
+        _statusColor = Colors.red;
+        _busy = false;
+      });
     }
-
-    await FirebaseService.instance.createPatient(
-      name: _name.text,
-      phone: _phone.text,
-      surgeryDate: _date!,
-    );
-    setState(() {
-      _waiting = true;
-      _busy = false;
-    });
-
-    FirebaseService.instance.patientStatusStream().listen((snap) {
-      if (snap.data()?['status'] == 'approved') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => const PatientHomePage()
-          ),
-        );
-      }
-    });
   }
 
   @override
@@ -86,23 +92,35 @@ class _SignupPageState extends State<SignupPage> {
         body: Center(
           child: _busy
               ? const CircularProgressIndicator()
-              : const Text(
-                  "Your request is sent. Waiting for dentist approval...",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18),
-                ),
+              : const Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              "Your request is sent.\nWaiting for dentist approval...",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18),
+            ),
+          ),
         ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mend Smile - Patient Login')),
+      backgroundColor: Colors.grey.shade100,
+      appBar: AppBar(
+        backgroundColor: AppColors().primary,
+        foregroundColor: Colors.white,
+        title: const Text('Mend Smile - Sign Up'),
+        centerTitle: true,
+        elevation: 4,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 32),
+            Icon(Icons.app_registration_rounded, size: 80, color: AppColors().primary),
+            const SizedBox(height: 24),
             TextField(
               controller: _name,
               decoration: _decor('Full Name', Icons.person),
@@ -127,21 +145,26 @@ class _SignupPageState extends State<SignupPage> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: const TextStyle(fontSize: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: _busy ? null : _submit,
-              child: const Text('Submit'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
+                backgroundColor: AppColors().primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 textStyle: const TextStyle(fontSize: 18),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
+              child: _busy
+                  ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+              )
+                  : const Text('Submit'),
             ),
             if (_statusMessage != null)
               Padding(
@@ -174,7 +197,7 @@ class _SignupPageState extends State<SignupPage> {
       prefixIcon: Icon(icon),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
-      fillColor: Colors.grey.shade100,
+      fillColor: Colors.white,
     );
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/route_names.dart';
+import '../../core/session_manager.dart';
+import '../../data/firebase_service.dart';
+import '../../utils/AppColors.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -22,71 +25,101 @@ class _SignInPageState extends State<SignInPage> {
 
   Future<void> _signIn() async {
     final name = _name.text.trim();
-    if (name.isEmpty) return;
+    if (name.length < 3) {
+      setState(() => _error = 'Please enter a valid full name.');
+      return;
+    }
 
+    FocusScope.of(context).unfocus(); // Hide keyboard
     setState(() {
       _busy = true;
       _error = null;
     });
 
-    final query = await FirebaseFirestore.instance
-        .collection('patients')
-        .where('name', isEqualTo: name)
-        .limit(1)
-        .get();
-
-    if (query.docs.isEmpty) {
+    try {
+      await FirebaseService.instance.signInByPatientName(name);
+      await SessionManager.saveSession('patient');
+      context.go(RouteNames.patientHomePage);
+    } catch (e) {
       setState(() {
-        _error = 'No patient found with that name.';
+        _error = e.toString().replaceFirst('Exception: ', '');
         _busy = false;
       });
-    } else if (query.docs.first.data()['status'] != 'approved') {
-      setState(() {
-        _error = 'Patient found, but not yet approved by dentist.';
-        _busy = false;
-      });
-    } else {
-      setState(() => _busy = false);
-      context.go('/patient_home_page');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeColor = AppColors().primary;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Mend Smile - Sign In')),
-      body: Padding(
+      backgroundColor: Colors.grey.shade100,
+      appBar: AppBar(
+        backgroundColor: themeColor,
+        foregroundColor: Colors.white,
+        title: const Text('Mend Smile - Sign In'),
+        centerTitle: true,
+        elevation: 4,
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 40),
+            Image.asset('assets/images/logo.png', width: 160, height: 160),
+            const SizedBox(height: 24),
+            Text(
+              'Welcome Back!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: themeColor,
+              ),
+            ),
+            const SizedBox(height: 24),
             TextField(
               controller: _name,
               decoration: InputDecoration(
                 labelText: 'Enter your full name',
                 prefixIcon: const Icon(Icons.person),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: Colors.white,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             if (_error != null)
-              Text(_error!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton(
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.login),
+              label: _busy
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+                  : const Text('Sign In'),
               onPressed: _busy ? null : _signIn,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: themeColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(fontSize: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                elevation: 4,
               ),
-              child: _busy
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Sign In'),
             ),
           ],
         ),

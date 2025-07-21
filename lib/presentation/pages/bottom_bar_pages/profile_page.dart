@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mend_smile/core/route_names.dart';
 
-class AppColors {
-  static const Color primary = Color(0xFF2AA8DF);
-}
+import '../../../core/session_manager.dart';
+import '../../../data/firebase_service.dart';
+import '../../../utils/AppColors.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,6 +15,33 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   bool notificationsOn = true;
+  String? name;
+  String? phone;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadProfile();
+  }
+
+  Future<void> loadProfile() async {
+    final docId = FirebaseService.instance.getCurrentPatientDocId();
+    if (docId != null) {
+      final data = await FirebaseService.instance.getPatientProfile(docId);
+      if (data != null) {
+        setState(() {
+          name = data['name'];
+          phone = data['phone'];
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+      }
+    } else {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,35 +50,39 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         title: const Text('Profile'),
         centerTitle: true,
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors().primary,
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             const SizedBox(height: 20),
-            CircleAvatar(
+            const CircleAvatar(
               radius: 100,
-              backgroundImage: const AssetImage(
-                'assets/images/doctor_placeholder.png',
-              ),
+              backgroundImage:
+              AssetImage('assets/images/doctor_placeholder.png'),
               backgroundColor: Colors.white,
             ),
             const SizedBox(height: 30),
-            _InfoCard(title: 'Full Name', value: 'John Doe'),
+            _InfoCard(title: 'Full Name', value: name ?? '---'),
             const SizedBox(height: 16),
-            _InfoCard(title: 'Phone Number', value: '+998 90 123 45 67'),
+            _InfoCard(title: 'Phone Number', value: phone ?? '---'),
             const SizedBox(height: 16),
             _SwitchCard(
               title: 'Notifications',
               value: notificationsOn,
-              onChanged: (val) => setState(() => notificationsOn = val),
+              onChanged: (val) =>
+                  setState(() => notificationsOn = val),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () {
-                // TODO: implement log out logic
+              onPressed: () async {
+                // Clear local session
+                await SessionManager.clearSession();
+                if (context.mounted) context.go(RouteNames.loginPage);
               },
               icon: const Icon(Icons.logout),
               label: const Text('Log Out'),
@@ -136,7 +169,7 @@ class _SwitchCard extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeColor: AppColors().primary,
           ),
         ],
       ),

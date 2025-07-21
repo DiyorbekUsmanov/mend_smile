@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../presentation/pages/bottom_bar_pages/patient_home_page.dart';
-
-class AppColors {
-  static const Color primary = Color(0xFF2AA8DF);
-}
+import '../utils/AppColors.dart';
 
 class NavigationScreen extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -40,7 +37,7 @@ class NavigationScreen extends StatelessWidget {
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: _onTap,
               labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors().primary,
               indicatorColor: Colors.transparent,
               destinations: List.generate(_destinations.length, (index) {
                 final isCenter = index == 2;
@@ -70,7 +67,7 @@ class NavigationScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: navigationShell.currentIndex == 2
                         ? Colors.white
-                        : AppColors.primary,
+                        : AppColors().primary,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.5),
@@ -83,7 +80,7 @@ class NavigationScreen extends StatelessWidget {
                     Icons.home,
                     size: 32,
                     color: navigationShell.currentIndex == 2
-                        ? AppColors.primary
+                        ? AppColors().primary
                         : Colors.white,
                   ),
                 ),

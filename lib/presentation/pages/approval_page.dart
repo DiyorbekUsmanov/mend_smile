@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mend_smile/core/route_names.dart';
+import 'package:mend_smile/core/session_manager.dart';
 
 import '../../data/firebase_service.dart';
 
@@ -12,6 +15,16 @@ class ApprovalPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('🦷 Patient Approval'),
         backgroundColor: Colors.teal,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () async {
+              await SessionManager.clearSession();
+              context.go(RouteNames.loginPage);
+            },
+          )
+        ],
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseService.instance.pendingPatientsStream(),

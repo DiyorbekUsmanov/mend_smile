@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-class AppColors {
-  static const Color primary = Color(0xFF2AA8DF);
-}
+import '../../../utils/AppColors.dart';
+
 
 class QaPage extends StatefulWidget {
   const QaPage({super.key});
@@ -45,7 +44,7 @@ class _QaPageState extends State<QaPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daily Questionnaire'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors().primary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -63,7 +62,7 @@ class _QaPageState extends State<QaPage> {
                     child: CircleAvatar(
                       radius: 22,
                       backgroundColor:
-                      painLevel == level ? AppColors.primary : Colors.grey.shade300,
+                      painLevel == level ? AppColors().primary : Colors.grey.shade300,
                       child: Text('$level', style: const TextStyle(color: Colors.white)),
                     ),
                   );
@@ -122,7 +121,7 @@ class _QaPageState extends State<QaPage> {
             ElevatedButton(
               onPressed: isComplete ? _submit : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: isComplete ? AppColors.primary : Colors.grey,
+                backgroundColor: isComplete ? AppColors().primary : Colors.grey,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: const TextStyle(fontSize: 18),
@@ -152,7 +151,7 @@ class _QaPageState extends State<QaPage> {
         children: [
           Row(
             children: [
-              Icon(icon, color: AppColors.primary),
+              Icon(icon, color: AppColors().primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(title,
@@ -173,7 +172,7 @@ class _QaPageState extends State<QaPage> {
       child: ElevatedButton(
         onPressed: () => setState(() => hasHeadache = value),
         style: ElevatedButton.styleFrom(
-          backgroundColor: selected ? AppColors.primary : Colors.grey.shade200,
+          backgroundColor: selected ? AppColors().primary : Colors.grey.shade200,
           foregroundColor: selected ? Colors.white : Colors.black87,
           elevation: selected ? 3 : 0,
           padding: const EdgeInsets.symmetric(vertical: 12),

@@ -13,7 +13,8 @@ class _VideoPageState extends State<VideoPage> {
     {
       'title': 'Jaw Relaxation',
       'videoPath': 'assets/videos/ex1.mp4',
-      'description': 'Gentle movements to help relax jaw muscles and reduce tension.',
+      'description':
+          'Gentle movements to help relax jaw muscles and reduce tension.',
     },
     {
       'title': 'Neck Stretching',
@@ -28,17 +29,20 @@ class _VideoPageState extends State<VideoPage> {
     {
       'title': 'Tongue Push-Ups',
       'videoPath': 'assets/videos/ex4.mp4',
-      'description': 'Strengthens the tongue and jaw coordination post-surgery.',
+      'description':
+          'Strengthens the tongue and jaw coordination post-surgery.',
     },
     {
       'title': 'Side-to-Side Jaw Movement',
       'videoPath': 'assets/videos/ex5.mp4',
-      'description': 'Improves lateral movement of the jaw to restore flexibility.',
+      'description':
+          'Improves lateral movement of the jaw to restore flexibility.',
     },
     {
       'title': 'Cheek Massage',
       'videoPath': 'assets/videos/ex6.mp4',
-      'description': 'Stimulates circulation and reduces stiffness in jaw muscles.',
+      'description':
+          'Stimulates circulation and reduces stiffness in jaw muscles.',
     },
     {
       'title': 'Controlled Jaw Clenching',
@@ -71,7 +75,6 @@ class _VideoPageState extends State<VideoPage> {
       'description': 'Corrects head and neck posture to reduce jaw strain.',
     },
   ];
-
 
   final Map<String, bool> completedVideos = {};
   DateTime? _lastCompletedDay;
@@ -122,12 +125,21 @@ class _VideoPageState extends State<VideoPage> {
           ...videos.map((video) {
             final isDone = completedVideos[video['title']] == true;
             return Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               elevation: 3,
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
-                leading: const Icon(Icons.ondemand_video, size: 40, color: Colors.blueAccent),
-                title: Text(video['title']!, style: const TextStyle(fontWeight: FontWeight.w600)),
+                leading: const Icon(
+                  Icons.ondemand_video,
+                  size: 40,
+                  color: Colors.blueAccent,
+                ),
+                title: Text(
+                  video['title']!,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -184,13 +196,15 @@ class _VideoPageState extends State<VideoPage> {
             const SizedBox(height: 4),
             CircleAvatar(
               radius: 14,
-              backgroundColor: isToday && _allCompleted ? Colors.green : Colors.grey.shade300,
+              backgroundColor: isToday && _allCompleted
+                  ? Colors.green
+                  : Colors.grey.shade300,
               child: isToday && _allCompleted
                   ? const Icon(Icons.check, size: 16, color: Colors.white)
                   : Text(
-                '${DateTime.now().subtract(Duration(days: todayIndex - i)).day}',
-                style: const TextStyle(fontSize: 12, color: Colors.black),
-              ),
+                      '${DateTime.now().subtract(Duration(days: todayIndex - i)).day}',
+                      style: const TextStyle(fontSize: 12, color: Colors.black),
+                    ),
             ),
           ],
         );

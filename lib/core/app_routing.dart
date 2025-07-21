@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mend_smile/core/route_names.dart';
 import 'package:mend_smile/presentation/pages/approval_page.dart';
 import 'package:mend_smile/presentation/pages/sign_up_page.dart';
 import 'package:mend_smile/presentation/pages/sign_in_page.dart';
@@ -8,28 +9,17 @@ import 'package:mend_smile/presentation/pages/bottom_bar_pages/patient_home_page
 import 'package:mend_smile/presentation/pages/bottom_bar_pages/profile_page.dart';
 import 'package:mend_smile/presentation/pages/bottom_bar_pages/qa_page.dart';
 import 'package:mend_smile/presentation/pages/bottom_bar_pages/video_page.dart';
-import 'package:mend_smile/presentation/pages/home_page.dart';
+import '../presentation/pages/login_page.dart';
 import 'navigation_screen.dart';
 
 class AppRouter {
-  static final GoRouter router = GoRouter(
-    initialLocation: '/home_page',
-    routes: [
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            NavigationScreen(navigationShell: navigationShell),
-        branches: _buildNavigationBranches(),
-      ),..._buildStandaloneRoutes(),
-    ],
-  );
-
-  static List<StatefulShellBranch> _buildNavigationBranches() {
+  static List<StatefulShellBranch> buildNavigationBranches() {
     final navRoutes = [
-      {'path': '/video_page', 'page': const VideoPage()},
-      {'path': '/diet_page', 'page': const DietPage()},
-      {'path': '/patient_home_page', 'page': const PatientHomePage()},
-      {'path': '/qa_page', 'page': const QaPage()},
-      {'path': '/profile_page', 'page': const ProfilePage()},
+      {'path': RouteNames.videoPage, 'page': const VideoPage()},
+      {'path': RouteNames.dietPage, 'page': const DietPage()},
+      {'path': RouteNames.patientHomePage, 'page': const PatientHomePage()},
+      {'path': RouteNames.qaPage, 'page': const QaPage()},
+      {'path': RouteNames.profilePage, 'page': const ProfilePage()},
     ];
 
     return navRoutes.map((route) => StatefulShellBranch(
@@ -44,12 +34,12 @@ class AppRouter {
     )).toList();
   }
 
-  static List<GoRoute> _buildStandaloneRoutes() {
+  static List<GoRoute> buildStandaloneRoutes() {
     final otherRoutes = [
-      {'path': '/home_page', 'page': const HomePage()},
-      {'path': '/approval_page', 'page': const ApprovalPage()},
-      {'path': '/sign_in_page', 'page': const SignInPage()},
-      {'path': '/sign_up_page', 'page': const SignupPage()},
+      {'path': RouteNames.approvalPage, 'page': const ApprovalPage()},
+      {'path': RouteNames.signInPage, 'page': const SignInPage()},
+      {'path': RouteNames.signUpPage, 'page': const SignupPage()},
+      {'path': RouteNames.loginPage, 'page': const LoginPage()},
     ];
 
     return otherRoutes.map((route) => GoRoute(
