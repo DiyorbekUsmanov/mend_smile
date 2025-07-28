@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../../../data/patient_firebase.dart';
 import '../../../utils/AppColors.dart';
 
 
@@ -11,41 +11,77 @@ class QaPage extends StatefulWidget {
 }
 
 class _QaPageState extends State<QaPage> {
+  bool _loading = true;
+  bool _alreadySubmitted = false;
   int? painLevel;
   bool? hasHeadache;
   int? mealsPerDay;
   final TextEditingController _noteCtrl = TextEditingController();
 
-  bool get isComplete =>
-      painLevel != null &&
-          hasHeadache != null &&
-          mealsPerDay != null &&
-          _noteCtrl.text.trim().isNotEmpty;
+  bool get isComplete => painLevel != null && hasHeadache != null && mealsPerDay != null && _noteCtrl.text.trim().isNotEmpty;
 
   @override
-  void dispose() {
-    _noteCtrl.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _checkIfSubmitted();
   }
 
-  void _submit() {
+  Future<void> _checkIfSubmitted() async {
+    final submitted = await PatientFirebaseService.instance.hasSubmittedQAForToday();
+    setState(() {
+      _alreadySubmitted = submitted;
+      _loading = false;
+    });
+  }
+
+  Future<void> _submit() async {
     if (!isComplete) return;
-    showDialog(
-      context: context,
-      builder: (_) => const AlertDialog(
-        title: Text('Submitted'),
-        content: Text('Your answers have been sent to the doctor.'),
-      ),
-    );
+
+    setState(() => _loading = true);
+
+    try {
+      await PatientFirebaseService.instance.submitQA(
+        painLevel: painLevel!,
+        hasHeadache: hasHeadache!,
+        mealsPerDay: mealsPerDay!,
+        note: _noteCtrl.text.trim(),
+      );
+
+      setState(() {
+        _alreadySubmitted = true;
+        _loading = false;
+      });
+
+      showDialog(
+        context: context,
+        builder: (_) => const AlertDialog(
+          title: Text('Submitted'),
+          content: Text('Your answers have been sent to the doctor.'),
+        ),
+      );
+    } catch (e) {
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_alreadySubmitted) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Daily Questionnaire'), backgroundColor: AppColors().primary),
+        body: const Center(child: Text('✅ You have already submitted today\'s questions.\nCome back tomorrow.', textAlign: TextAlign.center)),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daily Questionnaire'),
-        backgroundColor: AppColors().primary,
-      ),
+      appBar: AppBar(title: const Text('Daily Questionnaire'), backgroundColor: AppColors().primary),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
@@ -61,8 +97,7 @@ class _QaPageState extends State<QaPage> {
                     onTap: () => setState(() => painLevel = level),
                     child: CircleAvatar(
                       radius: 22,
-                      backgroundColor:
-                      painLevel == level ? AppColors().primary : Colors.grey.shade300,
+                      backgroundColor: painLevel == level ? AppColors().primary : Colors.grey.shade300,
                       child: Text('$level', style: const TextStyle(color: Colors.white)),
                     ),
                   );
@@ -89,15 +124,14 @@ class _QaPageState extends State<QaPage> {
                 value: mealsPerDay,
                 items: List.generate(6, (index) {
                   final count = index + 1;
-                  return DropdownMenuItem(
-                      value: count, child: Text('$count times'));
+                  return DropdownMenuItem(value: count, child: Text('$count times'));
                 }),
                 onChanged: (val) => setState(() => mealsPerDay = val),
                 decoration: InputDecoration(
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   filled: true,
                   fillColor: Colors.grey.shade100,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
               ),
             ),
@@ -134,6 +168,7 @@ class _QaPageState extends State<QaPage> {
       ),
     );
   }
+
 
   Widget _questionCard({required IconData icon, required String title, required Widget child}) {
     return Container(
@@ -183,3 +218,4 @@ class _QaPageState extends State<QaPage> {
     );
   }
 }
+

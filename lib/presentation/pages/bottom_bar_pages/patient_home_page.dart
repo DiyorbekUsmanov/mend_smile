@@ -37,7 +37,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final DateTime startDate = DateTime.now().subtract(const Duration(days: 10));
+    final DateTime startDate = DateTime.now().subtract(const Duration(days: 19));
     final DateTime endDate = startDate.add(const Duration(days: 30));
     final double progress = DateTime.now().difference(startDate).inDays / 30.0;
 
@@ -50,7 +50,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
           children: [
             const CircleAvatar(
               radius: 22,
-              backgroundImage: AssetImage('assets/user_placeholder.png'),
+              backgroundImage: AssetImage('assets/images/user_placeholder.png'),
             ),
             const SizedBox(width: 12),
             Column(

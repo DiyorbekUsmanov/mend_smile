@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mend_smile/data/doc_firebase.dart';
 import '../../core/route_names.dart';
 import '../../core/session_manager.dart';
 import '../../data/firebase_service.dart';
+import '../../data/patient_firebase.dart';
 import '../../utils/AppColors.dart';
 
 class SignupPage extends StatefulWidget {
@@ -48,7 +50,7 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      final docId = await FirebaseService.instance.createPatient(
+      final docId = await PatientFirebaseService.instance.createPatient(
         name: _name.text.trim(),
         phone: _phone.text.trim(),
         surgeryDate: _date!,
@@ -59,7 +61,7 @@ class _SignupPageState extends State<SignupPage> {
         _busy = false;
       });
 
-      _statusStream = FirebaseService.instance.patientStatusStream(docId);
+      _statusStream = DocFirebaseService.instance.patientStatusStream(docId);
       _statusStream!.listen((snap) async {
         final data = snap.data();
         if (data != null) {
@@ -69,7 +71,8 @@ class _SignupPageState extends State<SignupPage> {
             context.go(RouteNames.patientHomePage);
           } else if (status == 'duplicate') {
             setState(() {
-              _statusMessage = '⛔ Patient already exists. Please use the Sign In page.';
+              _statusMessage =
+                  '⛔ Patient already exists. Please use the Sign In page.';
               _statusColor = Colors.red;
               _waiting = false;
             });
@@ -78,7 +81,8 @@ class _SignupPageState extends State<SignupPage> {
       });
     } catch (e) {
       setState(() {
-        _statusMessage = 'Error: ${e.toString().replaceFirst('Exception: ', '')}';
+        _statusMessage =
+            'Error: ${e.toString().replaceFirst('Exception: ', '')}';
         _statusColor = Colors.red;
         _busy = false;
       });
@@ -93,13 +97,13 @@ class _SignupPageState extends State<SignupPage> {
           child: _busy
               ? const CircularProgressIndicator()
               : const Padding(
-            padding: EdgeInsets.all(24),
-            child: Text(
-              "Your request is sent.\nWaiting for dentist approval...",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18),
-            ),
-          ),
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    "Your request is sent.\nWaiting for dentist approval...",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
         ),
       );
     }
@@ -119,7 +123,11 @@ class _SignupPageState extends State<SignupPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 32),
-            Icon(Icons.app_registration_rounded, size: 80, color: AppColors().primary),
+            Icon(
+              Icons.app_registration_rounded,
+              size: 80,
+              color: AppColors().primary,
+            ),
             const SizedBox(height: 24),
             TextField(
               controller: _name,
@@ -145,7 +153,9 @@ class _SignupPageState extends State<SignupPage> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: const TextStyle(fontSize: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -156,14 +166,19 @@ class _SignupPageState extends State<SignupPage> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 textStyle: const TextStyle(fontSize: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: _busy
                   ? const SizedBox(
-                height: 24,
-                width: 24,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-              )
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
                   : const Text('Submit'),
             ),
             if (_statusMessage != null)

@@ -13,7 +13,7 @@ void main() async {
 
   final isLoggedIn = await SessionManager.isLoggedIn();
   final userType = await SessionManager.getUserType();
-  final initialRoute = isLoggedIn ? (userType == 'admin'? RouteNames.approvalPage : RouteNames.patientHomePage) : RouteNames.loginPage;
+  final initialRoute = isLoggedIn ? (userType == 'admin'? RouteNames.viewPatientsPage : RouteNames.patientHomePage) : RouteNames.loginPage;
 
   final router = GoRouter(
     initialLocation: initialRoute,

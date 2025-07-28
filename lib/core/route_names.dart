@@ -8,11 +8,13 @@ class RouteNames {
 
   // Standalone routes
   static const String homePage = '/home_page';
-  static const String approvalPage = '/approval_page';
+  static const String viewPatientsPage = '/approval_page';
   static const String signInPage = '/sign_in_page';
   static const String signUpPage = '/sign_up_page';
   static const String videoPlayerPage = '/video_player';
   static const String welcomePage = '/welcome_page';
   static const String loginPage = '/login_page';
+  static const String testResultsPage = '/test_results';
+  static const String quizResultDetailPage = '/quiz_result_detail';
 
 }

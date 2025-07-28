@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mend_smile/core/route_names.dart';
+import 'package:mend_smile/data/patient_firebase.dart';
 
 import '../../../core/session_manager.dart';
 import '../../../data/firebase_service.dart';
@@ -26,9 +27,9 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> loadProfile() async {
-    final docId = FirebaseService.instance.getCurrentPatientDocId();
+    final docId = PatientFirebaseService.instance.getCurrentPatientDocId();
     if (docId != null) {
-      final data = await FirebaseService.instance.getPatientProfile(docId);
+      final data = await PatientFirebaseService.instance.getPatientProfile(docId);
       if (data != null) {
         setState(() {
           name = data['name'];

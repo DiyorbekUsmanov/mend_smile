@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mend_smile/utils/AppColors.dart';
 
 class DietPage extends StatelessWidget {
   const DietPage({super.key});
@@ -8,6 +9,7 @@ class DietPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Post-Surgery Diet Tips'),
+        backgroundColor: AppColors().primary,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),

@@ -10,61 +10,62 @@ class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   Future<void> _showAdminDialog(BuildContext context) async {
-    final nameCtrl = TextEditingController();
-    final passCtrl = TextEditingController();
-
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Admin Login'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                prefixIcon: Icon(Icons.person),
+      builder: (ctx) {
+        final nameCtrl = TextEditingController();
+        final passCtrl = TextEditingController();
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Admin Login'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  prefixIcon: Icon(Icons.person),
+                ),
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: passCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: Icon(Icons.lock),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: passCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                prefixIcon: Icon(Icons.lock),
-              ),
+            ElevatedButton(
+              onPressed: () {
+                final isValid = nameCtrl.text == 'admin' && passCtrl.text == 'password';
+                Navigator.pop(ctx, isValid);
+              },
+              child: const Text('Enter'),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final isValid = nameCtrl.text == 'admin' && passCtrl.text == 'password';
-              Navigator.pop(ctx, isValid);
-            },
-            child: const Text('Enter'),
-          ),
-        ],
-      ),
+        );
+      },
     );
-
-    nameCtrl.dispose();
-    passCtrl.dispose();
 
     if (ok == true) {
       await SessionManager.saveSession('admin');
-      context.push(RouteNames.approvalPage);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid admin credentials')),
-      );
+      if (context.mounted) context.push(RouteNames.viewPatientsPage);
+    } else if (ok == false) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid admin credentials')),
+        );
+      }
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mend_smile/utils/AppColors.dart';
 import '../video_player_page.dart';
 
 class VideoPage extends StatefulWidget {
@@ -111,7 +112,7 @@ class _VideoPageState extends State<VideoPage> {
     final todayIndex = today.weekday % 7; // Sunday=0, Monday=1...
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Video Therapy')),
+      appBar: AppBar(title: const Text('Video Therapy'), backgroundColor: AppColors().primary,),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
