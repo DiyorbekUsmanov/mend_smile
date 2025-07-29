@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../data/patient_firebase.dart';
 import '../../../utils/AppColors.dart';
 
-
 class QaPage extends StatefulWidget {
   const QaPage({super.key});
 
@@ -13,12 +12,26 @@ class QaPage extends StatefulWidget {
 class _QaPageState extends State<QaPage> {
   bool _loading = true;
   bool _alreadySubmitted = false;
-  int? painLevel;
-  bool? hasHeadache;
-  int? mealsPerDay;
-  final TextEditingController _noteCtrl = TextEditingController();
 
-  bool get isComplete => painLevel != null && hasHeadache != null && mealsPerDay != null && _noteCtrl.text.trim().isNotEmpty;
+  double painLevel = 0;
+  String? painTime;
+  double swellingReduction = 1;
+  List<String> eatingIssues = [];
+  String? weightChange;
+  String? weightLossAmount;
+  bool? hygieneIssue;
+  String hygieneDetails = '';
+  List<String> speakingIssues = [];
+  String faceMovementLimit = '';
+  double lipSymptoms = 1;
+  String? sleepChange;
+  double overallHealth = 5;
+  String medicalVisits = '';
+  String? doctorInstructionsFollow;
+  String psychologicalState = '';
+  String? returnToWork;
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -27,24 +40,38 @@ class _QaPageState extends State<QaPage> {
   }
 
   Future<void> _checkIfSubmitted() async {
-    final submitted = await PatientFirebaseService.instance.hasSubmittedQAForToday();
+    final canSubmit = await PatientFirebaseService.instance.canSubmitQA();
     setState(() {
-      _alreadySubmitted = submitted;
+      _alreadySubmitted = !canSubmit;
       _loading = false;
     });
   }
 
   Future<void> _submit() async {
-    if (!isComplete) return;
+    if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
 
     setState(() => _loading = true);
 
     try {
       await PatientFirebaseService.instance.submitQA(
-        painLevel: painLevel!,
-        hasHeadache: hasHeadache!,
-        mealsPerDay: mealsPerDay!,
-        note: _noteCtrl.text.trim(),
+        painLevel: painLevel,
+        painTime: painTime!,
+        swellingReduction: swellingReduction,
+        eatingIssues: eatingIssues,
+        weightChange: weightChange!,
+        weightLossAmount: weightLossAmount ?? '',
+        hygieneIssue: hygieneIssue!,
+        hygieneDetails: hygieneDetails,
+        speakingIssues: speakingIssues,
+        faceMovementLimit: faceMovementLimit,
+        lipSymptoms: lipSymptoms,
+        sleepChange: sleepChange!,
+        overallHealth: overallHealth,
+        medicalVisits: medicalVisits,
+        doctorInstructionsFollow: doctorInstructionsFollow!,
+        psychologicalState: psychologicalState,
+        returnToWork: returnToWork!,
       );
 
       setState(() {
@@ -68,154 +95,131 @@ class _QaPageState extends State<QaPage> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_alreadySubmitted) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Daily Questionnaire'), backgroundColor: AppColors().primary),
-        body: const Center(child: Text('✅ You have already submitted today\'s questions.\nCome back tomorrow.', textAlign: TextAlign.center)),
+        appBar: AppBar(title: const Text('Daily QA'), backgroundColor: AppColors().primary),
+        body: const Center(child: Text('✅ Already submitted for today.\nCome back tomorrow.', textAlign: TextAlign.center)),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Daily Questionnaire'), backgroundColor: AppColors().primary),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      appBar: AppBar(title: const Text('Daily QA'), backgroundColor: AppColors().primary),
+      body: Form(
+        key: _formKey,
         child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            _questionCard(
-              icon: Icons.favorite,
-              title: '1. Rate your pain at the bottom part of the jaw:',
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(5, (index) {
-                  final level = index + 1;
-                  return GestureDetector(
-                    onTap: () => setState(() => painLevel = level),
-                    child: CircleAvatar(
-                      radius: 22,
-                      backgroundColor: painLevel == level ? AppColors().primary : Colors.grey.shade300,
-                      child: Text('$level', style: const TextStyle(color: Colors.white)),
-                    ),
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(height: 16),
-            _questionCard(
-              icon: Icons.psychology_alt,
-              title: '2. Do you have a headache?',
-              child: Row(
-                children: [
-                  _yesNoButton('Yes', true),
-                  const SizedBox(width: 12),
-                  _yesNoButton('No', false),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _questionCard(
-              icon: Icons.restaurant,
-              title: '3. How many times a day are you eating food?',
-              child: DropdownButtonFormField<int>(
-                value: mealsPerDay,
-                items: List.generate(6, (index) {
-                  final count = index + 1;
-                  return DropdownMenuItem(value: count, child: Text('$count times'));
-                }),
-                onChanged: (val) => setState(() => mealsPerDay = val),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            _questionCard(
-              icon: Icons.chat,
-              title: '4. Is there anything you want to tell the doctor?',
-              child: TextField(
-                controller: _noteCtrl,
-                onChanged: (_) => setState(() {}),
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: 'Write here...',
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
+            _sliderQuestion('1. Og‘riq darajasi (0–10)', painLevel, (v) => setState(() => painLevel = v), max: 10),
+            _dropdownQuestion('2. Og‘riq qachon ko‘proq seziladi?', ['tongda', 'ovqatlanayotganda', 'gaplashayotganda', 'dam olayotganda', 'boshqalar'], (val) => setState(() => painTime = val), painTime),
+            _sliderQuestion('3. Yuzda shish kamayishi (1–10)', swellingReduction, (v) => setState(() => swellingReduction = v), min: 1, max: 10),
+            _multiSelectQuestion('4. Ovqatlanishdagi muammolar', ['suyuqlik to‘kilib ketishi', 'og‘izda og‘riq', 'boshqalar'], eatingIssues),
+            _dropdownQuestion('5. Tana vazni o‘zgarishi', ['o‘zgarmadi', 'kamaydi', 'keskin kamaydi'], (val) => setState(() => weightChange = val), weightChange),
+            _textQuestion('6. Kamaysa, qancha massani yo‘qotdingiz?', (val) => weightLossAmount = val),
+            _yesNoQuestion('7. Og‘iz gigiyenasi muammosi bormi?', (val) => setState(() => hygieneIssue = val), hygieneIssue),
+            if (hygieneIssue == true) _textQuestion('8. Agar ha bo‘lsa, qanday?', (val) => hygieneDetails = val),
+            _multiSelectQuestion('9. Gapirishdagi noqulayliklar', ['talaffuz buzilishi', 'og‘riq', 'toliqish', 'yo‘q'], speakingIssues),
+            _textQuestion('10. Yuz harakatlaridagi cheklovlar', (val) => faceMovementLimit = val),
+            _sliderQuestion('11. Pastki lab belgilari (1–10)', lipSymptoms, (v) => setState(() => lipSymptoms = v), min: 1, max: 10),
+            _dropdownQuestion('12. Uyqu sifati qanday o‘zgardi?', ['yaxshilandi', 'yomonlashdi', 'o‘zgarmadi'], (val) => setState(() => sleepChange = val), sleepChange),
+            _sliderQuestion('13. Umumiy holatingiz (1–10)', overallHealth, (v) => setState(() => overallHealth = v), min: 1, max: 10),
+            _textQuestion('14. Qaysi shifokorga murojaat qildingiz?', (val) => medicalVisits = val),
+            _dropdownQuestion('15. Tavsiyalarga amal qilish darajasi', ['100%', 'qisman', 'qilmayapman'], (val) => setState(() => doctorInstructionsFollow = val), doctorInstructionsFollow),
+            _textQuestion('16. Psixologik holatingiz qanday?', (val) => psychologicalState = val),
+            _dropdownQuestion('17. Ishga/o‘qishga qaytish imkoniyati', ['ha', 'yo‘q', 'qisman'], (val) => setState(() => returnToWork = val), returnToWork),
+            const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: isComplete ? _submit : null,
+              onPressed: _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: isComplete ? AppColors().primary : Colors.grey,
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors().primary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: const TextStyle(fontSize: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('Submit'),
-            ),
+            )
           ],
         ),
       ),
     );
   }
 
-
-  Widget _questionCard({required IconData icon, required String title, required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 8, offset: const Offset(0, 4)),
-        ],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: AppColors().primary),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(title,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
+  Widget _sliderQuestion(String title, double value, void Function(double) onChanged, {double min = 0, double max = 10}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Slider(value: value, min: min, max: max, divisions: (max - min).toInt(), label: value.toStringAsFixed(0), onChanged: onChanged),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
-  Widget _yesNoButton(String label, bool value) {
-    final selected = hasHeadache == value;
-    return Expanded(
-      child: ElevatedButton(
-        onPressed: () => setState(() => hasHeadache = value),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: selected ? AppColors().primary : Colors.grey.shade200,
-          foregroundColor: selected ? Colors.white : Colors.black87,
-          elevation: selected ? 3 : 0,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+  Widget _dropdownQuestion(String title, List<String> items, void Function(String?) onChanged, String? currentVal) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: TextStyle(fontWeight: FontWeight.bold),),
+        DropdownButtonFormField<String>(
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          value: currentVal,
+          onChanged: onChanged,
+          hint: const Text('Tanlang'), // 👈 Hint added here
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
         ),
-        child: Text(label),
-      ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _multiSelectQuestion(String title, List<String> options, List<String> selected) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ...options.map((e) => CheckboxListTile(
+          value: selected.contains(e),
+          title: Text(e),
+          onChanged: (val) {
+            setState(() {
+              if (val == true) {
+                selected.add(e);
+              } else {
+                selected.remove(e);
+              }
+            });
+          },
+        )),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _yesNoQuestion(String title, void Function(bool) onChanged, bool? currentVal) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Row(
+          children: [
+            Expanded(child: RadioListTile(value: true, groupValue: currentVal, title: const Text('Ha'), onChanged: (val) => onChanged(true))),
+            Expanded(child: RadioListTile(value: false, groupValue: currentVal, title: const Text('Yo‘q'), onChanged: (val) => onChanged(false))),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _textQuestion(String title, void Function(String) onSaved) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        TextFormField(onSaved: (val) => onSaved(val ?? ''), decoration: const InputDecoration(hintText: 'Yozing...')),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }
-

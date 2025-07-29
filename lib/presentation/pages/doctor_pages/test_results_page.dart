@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mend_smile/core/route_names.dart';
 
-class TestResultsPage extends StatelessWidget {
+class TestResultsPage extends StatefulWidget {
   final String patientId;
   final String name;
   final String? startDate;
@@ -17,10 +17,17 @@ class TestResultsPage extends StatelessWidget {
     this.endDate,
   });
 
+  @override
+  State<TestResultsPage> createState() => _TestResultsPageState();
+}
+
+class _TestResultsPageState extends State<TestResultsPage> {
+  bool isTestGiven = false;
+
   Stream<QuerySnapshot<Map<String, dynamic>>> get quizDatesStream {
     return FirebaseFirestore.instance
         .collection('patients')
-        .doc(patientId)
+        .doc(widget.patientId)
         .collection('qa')
         .orderBy('submittedAt', descending: true)
         .snapshots();
@@ -28,12 +35,12 @@ class TestResultsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final start = startDate != null ? DateTime.parse(startDate!) : null;
-    final end = endDate != null ? DateTime.parse(endDate!) : null;
+    final start = widget.startDate != null ? DateTime.parse(widget.startDate!) : null;
+    final end = widget.endDate != null ? DateTime.parse(widget.endDate!) : null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$name - Test Results'),
+        title: Text('${widget.name} - Test Results'),
       ),
       body: Column(
         children: [
@@ -87,7 +94,7 @@ class TestResultsPage extends StatelessWidget {
                       title: Text('Quiz Date: $quizDate'),
                       onTap: () {
                         context.push(RouteNames.quizResultDetailPage, extra: {
-                          'patientId': patientId,
+                          'patientId': widget.patientId,
                           'quizId': quizDate,
                           'quizData': data,
                         });
@@ -101,17 +108,23 @@ class TestResultsPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton.icon(
-              onPressed: () {
-                context.go(RouteNames.qaPage); // navigate back to QA page
+              onPressed: () async {
+                await FirebaseFirestore.instance
+                    .collection('patients')
+                    .doc(widget.patientId)
+                    .update({'forceQaAccess': true});
+
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('QA access granted')));
               },
-              icon: const Icon(Icons.refresh),
-              label: const Text("Re-give Quiz"),
+              icon: const Icon(Icons.lock_open),
+              label: const Text("Enable QA Access"),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
+                backgroundColor: Colors.orange,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 48),
               ),
             ),
+
           ),
         ],
       ),

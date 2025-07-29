@@ -69,49 +69,76 @@ class PatientFirebaseService {
   }
 
   Future<void> submitQA({
-    required int painLevel,
-    required bool hasHeadache,
-    required int mealsPerDay,
-    required String note,
+    required double painLevel,
+    required String painTime,
+    required double swellingReduction,
+    required List<String> eatingIssues,
+    required String weightChange,
+    required String weightLossAmount,
+    required bool hygieneIssue,
+    required String hygieneDetails,
+    required List<String> speakingIssues,
+    required String faceMovementLimit,
+    required double lipSymptoms,
+    required String sleepChange,
+    required double overallHealth,
+    required String medicalVisits,
+    required String doctorInstructionsFollow,
+    required String psychologicalState,
+    required String returnToWork,
   }) async {
     final docId = _currentPatientDocId;
     if (docId == null) throw Exception("No patient signed in.");
 
     final today = DateTime.now();
-    final dateId =
-        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+    final dateId = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
 
-    await _db
+    await _db.collection('patients').doc(docId).collection('qa').doc(dateId).set({
+      'painLevel': painLevel,
+      'painTime': painTime,
+      'swellingReduction': swellingReduction,
+      'eatingIssues': eatingIssues,
+      'weightChange': weightChange,
+      'weightLossAmount': weightLossAmount,
+      'hygieneIssue': hygieneIssue,
+      'hygieneDetails': hygieneDetails,
+      'speakingIssues': speakingIssues,
+      'faceMovementLimit': faceMovementLimit,
+      'lipSymptoms': lipSymptoms,
+      'sleepChange': sleepChange,
+      'overallHealth': overallHealth,
+      'medicalVisits': medicalVisits,
+      'doctorInstructionsFollow': doctorInstructionsFollow,
+      'psychologicalState': psychologicalState,
+      'returnToWork': returnToWork,
+      'submittedAt': FieldValue.serverTimestamp(),
+    });
+    await FirebaseFirestore.instance
         .collection('patients')
-        .doc(docId)
-        .collection('qa')
-        .doc(dateId)
-        .set({
-          'painLevel': painLevel,
-          'hasHeadache': hasHeadache,
-          'mealsPerDay': mealsPerDay,
-          'note': note,
-          'submittedAt': FieldValue.serverTimestamp(),
-        });
+        .doc(_currentPatientDocId)
+        .update({'forceQaAccess': false});
+
   }
 
-  Future<bool> hasSubmittedQAForToday() async {
+  Future<bool> canSubmitQA() async {
     final docId = _currentPatientDocId;
     if (docId == null) return false;
 
-    final today = DateTime.now();
-    final dateId =
-        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+    final patientDoc = await FirebaseFirestore.instance.collection('patients').doc(docId).get();
+    final forceAccess = patientDoc.data()?['forceQaAccess'] == true;
 
-    final snapshot = await _db
-        .collection('patients')
-        .doc(docId)
-        .collection('qa')
-        .doc(dateId)
-        .get();
+    if (forceAccess) return true;
 
-    return snapshot.exists;
+    final qaCollection = patientDoc.reference.collection('qa');
+    final snapshot = await qaCollection.orderBy('submittedAt', descending: true).limit(1).get();
+
+    if (snapshot.docs.isEmpty) return true;
+
+    final lastSubmitted = (snapshot.docs.first['submittedAt'] as Timestamp).toDate();
+    return DateTime.now().difference(lastSubmitted).inDays >= 7;
   }
+
+
 
   Stream<QuerySnapshot<Map<String, dynamic>>> quizDatesStreamForPatient(
     String patientId,
