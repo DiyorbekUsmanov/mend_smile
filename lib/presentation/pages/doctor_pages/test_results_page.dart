@@ -24,6 +24,7 @@ class TestResultsPage extends StatefulWidget {
 class _TestResultsPageState extends State<TestResultsPage> {
   bool isTestGiven = false;
 
+
   Stream<QuerySnapshot<Map<String, dynamic>>> get quizDatesStream {
     return FirebaseFirestore.instance
         .collection('patients')
@@ -35,13 +36,15 @@ class _TestResultsPageState extends State<TestResultsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final start = widget.startDate != null ? DateTime.parse(widget.startDate!) : null;
+    final start = widget.startDate != null
+        ? DateTime.parse(widget.startDate!)
+        : null;
     final end = widget.endDate != null ? DateTime.parse(widget.endDate!) : null;
+    final now = DateTime.now();
+    final isTestFinished = end != null && now.isAfter(end);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('${widget.name} - Test Results'),
-      ),
+      appBar: AppBar(title: Text('${widget.name} - Test Results')),
       body: Column(
         children: [
           Container(
@@ -53,7 +56,9 @@ class _TestResultsPageState extends State<TestResultsPage> {
                 Column(
                   children: [
                     const Text('Start Date'),
-                    Text(start != null ? '${start.toLocal()}'.split(' ')[0] : '-'),
+                    Text(
+                      start != null ? '${start.toLocal()}'.split(' ')[0] : '-',
+                    ),
                   ],
                 ),
                 Column(
@@ -93,11 +98,14 @@ class _TestResultsPageState extends State<TestResultsPage> {
                       leading: const Icon(Icons.calendar_today),
                       title: Text('Quiz Date: $quizDate'),
                       onTap: () {
-                        context.push(RouteNames.quizResultDetailPage, extra: {
-                          'patientId': widget.patientId,
-                          'quizId': quizDate,
-                          'quizData': data,
-                        });
+                        context.push(
+                          RouteNames.quizResultDetailPage,
+                          extra: {
+                            'patientId': widget.patientId,
+                            'quizId': quizDate,
+                            'quizData': data,
+                          },
+                        );
                       },
                     );
                   },
@@ -105,6 +113,7 @@ class _TestResultsPageState extends State<TestResultsPage> {
               },
             ),
           ),
+
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton.icon(
@@ -114,17 +123,30 @@ class _TestResultsPageState extends State<TestResultsPage> {
                     .doc(widget.patientId)
                     .update({'forceQaAccess': true});
 
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('QA access granted')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      isTestFinished
+                          ? 'Test re-enabled for patient.'
+                          : 'QA access granted.',
+                    ),
+                  ),
+                );
               },
-              icon: const Icon(Icons.lock_open),
-              label: const Text("Enable QA Access"),
+              icon: Icon(
+                isTestFinished ? Icons.restart_alt : Icons.check_circle,
+              ),
+              label: Text(
+                isTestFinished
+                    ? 'Re-give the Test'
+                    : 'The test is still available',
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
+                backgroundColor: isTestFinished ? Colors.orange : Colors.green,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 48),
               ),
             ),
-
           ),
         ],
       ),

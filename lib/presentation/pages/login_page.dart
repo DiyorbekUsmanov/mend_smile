@@ -16,35 +16,65 @@ class LoginPage extends StatelessWidget {
         final passCtrl = TextEditingController();
 
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Admin Login'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: Colors.white,
+          title: Text(
+            'Admin Login',
+            style: TextStyle(
+              color: AppColors().primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 8),
               TextField(
                 controller: nameCtrl,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Name',
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: Icon(Icons.person, color: AppColors().primary),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors().primary),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               TextField(
                 controller: passCtrl,
                 obscureText: true,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock),
+                  prefixIcon: Icon(Icons.lock, color: AppColors().primary),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors().primary),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ],
           ),
+          actionsPadding: const EdgeInsets.only(right: 12, bottom: 8),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: Text('Cancel',style: TextStyle(color: AppColors().primary),),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors().primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
               onPressed: () {
                 final isValid = nameCtrl.text == 'admin' && passCtrl.text == 'password';
                 Navigator.pop(ctx, isValid);
@@ -58,7 +88,7 @@ class LoginPage extends StatelessWidget {
 
     if (ok == true) {
       await SessionManager.saveSession('admin');
-      if (context.mounted) context.push(RouteNames.viewPatientsPage);
+      if (context.mounted) context.go(RouteNames.viewPatientsPage);
     } else if (ok == false) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

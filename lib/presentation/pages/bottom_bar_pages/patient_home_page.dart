@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mend_smile/core/route_names.dart';
 
+import '../../../data/patient_firebase.dart';
 import '../../../utils/AppColors.dart';
 
 class PatientHomePage extends StatefulWidget {
@@ -16,17 +19,39 @@ class _PatientHomePageState extends State<PatientHomePage> {
     "Every smile begins with you.",
     "One step closer to healing.",
     "Keep going, you're doing great!",
-    "Progress, not perfection."
+    "Progress, not perfection.",
   ];
   int _quoteIndex = 0;
   Timer? _timer;
+  String name = '';
+  String phone = '';
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    loadProfile();
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       setState(() => _quoteIndex = (_quoteIndex + 1) % _quotes.length);
     });
+  }
+
+  Future<void> loadProfile() async {
+    final docId = PatientFirebaseService.instance.getCurrentPatientDocId();
+    if (docId != null) {
+      final data = await PatientFirebaseService.instance.getPatientProfile(docId);
+      if (data != null) {
+        setState(() {
+          name = data['name'] ?? '';
+          phone = data['phone'] ?? '';
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+      }
+    } else {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -53,15 +78,33 @@ class _PatientHomePageState extends State<PatientHomePage> {
               backgroundImage: AssetImage('assets/images/user_placeholder.png'),
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text('John Doe', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('+123 456 7890', style: TextStyle(color: Colors.white70, fontSize: 13)),
-              ],
+            isLoading
+                ? const CircularProgressIndicator(color: Colors.white)
+                : Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    phone,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const Spacer(),
-            Icon(Icons.notifications_none, color: Colors.white),
+            const SizedBox(width: 12),
+            const Icon(Icons.notifications_none, color: Colors.white),
           ],
         ),
       ),
@@ -78,19 +121,21 @@ class _PatientHomePageState extends State<PatientHomePage> {
                   icon: Icons.video_camera_front,
                   label: 'Video Therapy',
                   color: Colors.teal,
+                  route: RouteNames.videoPage,
                 ),
                 _navBox(
                   icon: Icons.question_answer,
                   label: 'Questionnaire',
                   color: Colors.orange,
+                  route: RouteNames.qaPage,
                 ),
               ],
             ),
             const Spacer(),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              child:
-              Container(
+              child: Container(
+                key: ValueKey(_quoteIndex),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.teal.shade50,
@@ -99,7 +144,6 @@ class _PatientHomePageState extends State<PatientHomePage> {
                 ),
                 child: Text(
                   _quotes[_quoteIndex],
-                  key: ValueKey(_quoteIndex),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18,
@@ -142,9 +186,14 @@ class _PatientHomePageState extends State<PatientHomePage> {
     );
   }
 
-  Widget _navBox({required IconData icon, required String label, required Color color}) {
+  Widget _navBox({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required String route,
+  }) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () => context.go(route),
       child: Container(
         width: 140,
         padding: const EdgeInsets.symmetric(vertical: 20),
@@ -160,10 +209,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
             const SizedBox(height: 12),
             Text(
               label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, color: color),
             ),
           ],
         ),

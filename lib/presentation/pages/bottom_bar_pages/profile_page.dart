@@ -28,7 +28,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> loadProfile() async {
     final docId = PatientFirebaseService.instance.getCurrentPatientDocId();
     if (docId != null) {
-      final data = await PatientFirebaseService.instance.getPatientProfile(docId);
+      final data = await PatientFirebaseService.instance.getPatientProfile(
+        docId,
+      );
       if (data != null) {
         setState(() {
           name = data['name'];
@@ -56,48 +58,83 @@ class _ProfilePageState extends State<ProfilePage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            const CircleAvatar(
-              radius: 100,
-              backgroundImage:
-              AssetImage('assets/images/doctor_placeholder.png'),
-              backgroundColor: Colors.white,
-            ),
-            const SizedBox(height: 30),
-            _InfoCard(title: 'Full Name', value: name ?? '---'),
-            const SizedBox(height: 16),
-            _InfoCard(title: 'Phone Number', value: phone ?? '---'),
-            const SizedBox(height: 16),
-            _SwitchCard(
-              title: 'Notifications',
-              value: notificationsOn,
-              onChanged: (val) =>
-                  setState(() => notificationsOn = val),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () async {
-                // Clear local session
-                await SessionManager.clearSession();
-                if (context.mounted) context.go(RouteNames.loginPage);
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Log Out'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  const CircleAvatar(
+                    radius: 100,
+                    backgroundImage: AssetImage(
+                      'assets/images/doctor_placeholder.png',
+                    ),
+                    backgroundColor: Colors.white,
+                  ),
+                  const SizedBox(height: 30),
+                  _InfoCard(title: 'Full Name', value: name ?? '---'),
+                  const SizedBox(height: 16),
+                  _InfoCard(title: 'Phone Number', value: phone ?? '---'),
+                  const SizedBox(height: 16),
+                  _SwitchCard(
+                    title: 'Notifications',
+                    value: notificationsOn,
+                    onChanged: (val) => setState(() => notificationsOn = val),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Log Out'),
+                          content: const Text(
+                            'Are you sure you want to log out?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: AppColors().primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text(
+                                'Log Out',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirmed == true) {
+                        await SessionManager.clearSession();
+                        if (context.mounted) context.go(RouteNames.loginPage);
+                      }
+                    },
+
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Log Out'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }
