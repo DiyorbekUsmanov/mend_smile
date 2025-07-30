@@ -5,7 +5,6 @@ import 'package:mend_smile/core/route_names.dart';
 import 'package:mend_smile/core/session_manager.dart';
 import 'package:mend_smile/data/doc_firebase.dart';
 import 'package:mend_smile/presentation/pages/doctor_pages/test_results_page.dart';
-import '../../../data/firebase_service.dart';
 
 class ViewPatientsPage extends StatefulWidget {
   const ViewPatientsPage({Key? key}) : super(key: key);

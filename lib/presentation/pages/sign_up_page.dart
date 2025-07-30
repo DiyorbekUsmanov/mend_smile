@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mend_smile/data/doc_firebase.dart';
 import '../../core/route_names.dart';
 import '../../core/session_manager.dart';
-import '../../data/firebase_service.dart';
 import '../../data/patient_firebase.dart';
 import '../../utils/AppColors.dart';
 

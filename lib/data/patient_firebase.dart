@@ -68,6 +68,35 @@ class PatientFirebaseService {
     return null;
   }
 
+  Future<void> saveVideoStatusForToday(Map<String, bool> statusMap) async {
+    final docId = _currentPatientDocId;
+    if (docId == null) return;
+
+    final todayKey = _todayKey();
+    await _db.collection('patients').doc(docId).collection('videoStatus').doc(todayKey).set({
+      'completedVideos': statusMap,
+      'completedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<Map<String, bool>> loadVideoStatusForToday() async {
+    final docId = _currentPatientDocId;
+    if (docId == null) return {};
+
+    final todayKey = _todayKey();
+    final doc = await _db.collection('patients').doc(docId).collection('videoStatus').doc(todayKey).get();
+
+    if (!doc.exists) return {};
+    final data = doc.data();
+    final map = data?['completedVideos'] as Map<String, dynamic>? ?? {};
+    return map.map((key, value) => MapEntry(key, value as bool));
+  }
+
+  String _todayKey() {
+    final now = DateTime.now();
+    return "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+  }
+
   Future<void> submitQA({
     required double painLevel,
     required String painTime,

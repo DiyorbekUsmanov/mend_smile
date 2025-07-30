@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mend_smile/utils/AppColors.dart';
+import '../../../data/patient_firebase.dart';
 import '../video_player_page.dart';
 
 class VideoPage extends StatefulWidget {
@@ -83,11 +84,20 @@ class _VideoPageState extends State<VideoPage> {
   @override
   void initState() {
     super.initState();
-    _resetIfNeeded();
-    for (var video in videos) {
-      completedVideos.putIfAbsent(video['title']!, () => false);
-    }
+    _loadStatusFromFirebase();
   }
+
+  void _loadStatusFromFirebase() async {
+    final statusMap = await PatientFirebaseService.instance.loadVideoStatusForToday();
+    setState(() {
+      completedVideos.clear();
+      for (var video in videos) {
+        completedVideos[video['title']!] = statusMap[video['title']!] ?? false;
+      }
+      _lastCompletedDay = DateTime.now();
+    });
+  }
+
 
   void _resetIfNeeded() {
     final today = DateTime.now();
@@ -150,11 +160,13 @@ class _VideoPageState extends State<VideoPage> {
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => VideoPlayerPage(
+                            builder: (_) =>VideoPlayerPage(
                               title: video['title']!,
                               videoPath: video['videoPath']!,
                               description: video['description']!,
-                            ),
+                              isAlreadyDone: completedVideos[video['title']] == true,
+                            )
+
                           ),
                         );
 
@@ -162,6 +174,7 @@ class _VideoPageState extends State<VideoPage> {
                           setState(() {
                             completedVideos[video['title']!] = true;
                           });
+                          await PatientFirebaseService.instance.saveVideoStatusForToday(completedVideos);
                         }
                       },
                     ),

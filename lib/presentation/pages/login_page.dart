@@ -4,7 +4,6 @@ import '../../core/navigation_screen.dart';
 import '../../core/route_names.dart';
 import '../../core/session_manager.dart';
 import '../../utils/AppColors.dart';
-import '../../data/firebase_service.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});

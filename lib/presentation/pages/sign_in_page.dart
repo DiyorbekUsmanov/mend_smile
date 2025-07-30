@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mend_smile/data/patient_firebase.dart';
 import '../../core/route_names.dart';
 import '../../core/session_manager.dart';
-import '../../data/firebase_service.dart';
 import '../../utils/AppColors.dart';
 
 class SignInPage extends StatefulWidget {

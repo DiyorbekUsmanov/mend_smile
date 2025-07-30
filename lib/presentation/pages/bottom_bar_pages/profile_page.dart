@@ -4,7 +4,6 @@ import 'package:mend_smile/core/route_names.dart';
 import 'package:mend_smile/data/patient_firebase.dart';
 
 import '../../../core/session_manager.dart';
-import '../../../data/firebase_service.dart';
 import '../../../utils/AppColors.dart';
 
 class ProfilePage extends StatefulWidget {
